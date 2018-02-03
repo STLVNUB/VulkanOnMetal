@@ -25,6 +25,10 @@
  * Author: Bill Hollings <bill.hollings@brenwill.com>
  */
 
+#if defined(VK_USE_PLATFORM_IOS_MVK) || defined(VK_USE_PLATFORM_MACOS_MVK)
+#import <Foundation/Foundation.h>
+#endif
+
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdarg.h>
