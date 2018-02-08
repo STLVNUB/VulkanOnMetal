@@ -13,6 +13,10 @@
 // limitations under the License.
 
 #include "_vulkan.h"
+#include "spirv_cross/spirv_msl.hpp"
+
+using namespace spv;
+using namespace spirv_cross;
 
 VKAPI_ATTR VkResult VKAPI_CALL vkCreateShaderModule(
     VkDevice                        device,
@@ -30,8 +34,41 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateShaderModule(
         shaderModule = new VkShaderModule_T();
     }
 
-    NSError* error;
-    shaderModule->library = [device->physicalDevice->device newLibraryWithData:(dispatch_data_t)pCreateInfo->pCode error:&error];
+    bool isSpirv = false;
+    if (pCreateInfo->codeSize >= 2)
+    {
+        switch (pCreateInfo->pCode[1])
+        {
+        case 0x10000:
+        case 0x10100:
+        case 0x10200:
+            isSpirv = true;
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (isSpirv)
+    {
+        CompilerMSL compiler(pCreateInfo->pCode, pCreateInfo->codeSize);
+
+        auto options = compiler.get_options();
+
+        options.set_msl_version(2);
+
+        auto shaderSource = compiler.compile();
+
+        auto nsShaderSource = [NSString stringWithCString:shaderSource.c_str() encoding:[NSString defaultCStringEncoding]];
+
+        NSError* error;
+        shaderModule->library = [device->physicalDevice->device newLibraryWithSource:nsShaderSource options:nil error:&error];
+    }
+    else
+    {
+        NSError* error;
+        shaderModule->library = [device->physicalDevice->device newLibraryWithData:(dispatch_data_t)pCreateInfo->pCode error:&error];
+    }
 
     *pShaderModule = shaderModule;
 

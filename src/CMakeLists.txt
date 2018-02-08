@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.0)
 
 include_directories(../include)
 
+include_directories(spirv_cross)
+add_subdirectory(spirv_cross)
+
 add_subdirectory(cube)
 add_subdirectory(vulkaninfo)
 
@@ -15,4 +18,4 @@ file(GLOB SOURCES *.mm)
 
 add_library(VulkanOnMetal SHARED ${HEADERS} ${SOURCES})
 set_property(TARGET VulkanOnMetal PROPERTY CXX_STANDARD 14)
-target_link_libraries(VulkanOnMetal objc "-framework Metal")
+target_link_libraries(VulkanOnMetal spirv_cross objc "-framework Metal")
